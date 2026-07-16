@@ -3,7 +3,17 @@ import random
 import subprocess
 from pathlib import Path
 
-ASSETS_MUSIC = Path(__file__).resolve().parent.parent / "assets" / "music"
+ROOT = Path(__file__).resolve().parent.parent
+ASSETS_MUSIC = ROOT / "assets" / "music"
+
+
+def _brand_logo(config: dict) -> Path | None:
+    """The channel's sonic signature, if configured and present."""
+    rel = config.get("branding", {}).get("sonic_logo")
+    if not rel:
+        return None
+    p = ROOT / rel
+    return p if p.exists() else None
 
 
 def _run(args: list, cwd: Path) -> None:
@@ -39,11 +49,12 @@ TRANSITIONS = ["fade", "fade", "smoothleft", "smoothright", "smoothup", "circleo
 
 def build_video(raw_clips: list, voice_mp3: Path, ass_file: Path, config: dict,
                 workdir: Path, out_file: Path, music_mood: str | None = None,
-                with_music: bool = True) -> Path:
+                with_music: bool = True, with_logo: bool = True) -> Path:
     v = config["video"]
     w, h, fps = v["width"], v["height"], v["fps"]
     td = float(v.get("transition_seconds", 0.35))
     music_vol = float(v.get("music_volume", 0.06))
+    logo_vol = float(config.get("branding", {}).get("sonic_logo_volume", 0.5))
     audio_len = _probe_duration(voice_mp3)
     total = audio_len + 0.6  # small tail so the last word isn't clipped
     n = len(raw_clips)
@@ -66,13 +77,22 @@ def build_video(raw_clips: list, voice_mp3: Path, ass_file: Path, config: dict,
 
     # 2. One pass: crossfade chain + burn captions + mix audio.
     music = _pick_music(music_mood) if with_music else None
+    logo = _brand_logo(config) if with_logo else None
     args = ["ffmpeg", "-y"]
     for p in norm_paths:
         args += ["-i", p.name]
     voice_idx = n
     args += ["-i", str(voice_mp3)]
+    next_idx = voice_idx + 1
+    music_idx = logo_idx = None
     if music:
         args += ["-stream_loop", "-1", "-i", str(music)]
+        music_idx = next_idx
+        next_idx += 1
+    if logo:
+        args += ["-i", str(logo)]  # short; plays once under the opening hook
+        logo_idx = next_idx
+        next_idx += 1
 
     filters = []
     if n == 1:
@@ -89,10 +109,20 @@ def build_video(raw_clips: list, voice_mp3: Path, ass_file: Path, config: dict,
             prev = label
         filters.append(f"[xv]ass={ass_file.name}[v]")
 
+    # Layer the audio: voice at full loudness, music quiet underneath, and the
+    # sonic logo playing once at the very start (under the hook). normalize=0
+    # keeps the voice from being ducked by the mix.
+    mix_sources = [f"[{voice_idx}:a]"]
     if music:
-        # normalize=0 keeps the voice at full loudness; music sits quietly underneath
-        filters.append(f"[{voice_idx + 1}:a]volume={music_vol}[m]")
-        filters.append(f"[{voice_idx}:a][m]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[a]")
+        filters.append(f"[{music_idx}:a]volume={music_vol}[m]")
+        mix_sources.append("[m]")
+    if logo:
+        filters.append(f"[{logo_idx}:a]volume={logo_vol}[l]")
+        mix_sources.append("[l]")
+    if len(mix_sources) > 1:
+        filters.append(
+            f"{''.join(mix_sources)}amix=inputs={len(mix_sources)}:"
+            "duration=first:dropout_transition=0:normalize=0[a]")
         audio_map = "[a]"
     else:
         audio_map = f"{voice_idx}:a"

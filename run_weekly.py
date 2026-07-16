@@ -107,7 +107,9 @@ def _build_segment(name: str, script: str, terms: list, hook: str | None,
     per_clip = (duration + 0.6 + (n_clips - 1) * td) / n_clips + 0.3
     clips = visuals.fetch_clips(terms[:n_clips], per_clip, cfg, seg_dir)
     seg_out = seg_dir / f"{name}.mp4"
-    assemble.build_video(clips, voice, ass_file, cfg, seg_dir, seg_out, with_music=False)
+    # sonic logo plays once, under the intro's hook — not on every segment
+    assemble.build_video(clips, voice, ass_file, cfg, seg_dir, seg_out,
+                         with_music=False, with_logo=(name == "intro"))
     return seg_out
 
 
