@@ -40,7 +40,7 @@
     "broll_cache_mb": 150
   },
   "branding": {
-    "sonic_logo": "assets/brand/sonic_logo_1.mp3",
+    "sonic_logo": "assets/brand/sonic_logo_3.mp3",
     "sonic_logo_volume": 0.5
   },
   "playlists": [
