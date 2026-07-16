@@ -1,0 +1,10 @@
+.env
+token.json
+client_secret.json
+__pycache__/
+output/
+work/
+logs/
+assets/broll/
+data/performance.json
+assets/music/
