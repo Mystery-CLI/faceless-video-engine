@@ -112,7 +112,8 @@ def fetch_clips(search_terms: list, seconds_each: float, config: dict, workdir: 
             img = workdir / f"ai_{i}.jpg"
             try:
                 if ai_images.generate_scene_image(term, video_cfg["width"],
-                                                  video_cfg["height"], img):
+                                                  video_cfg["height"], img,
+                                                  style=video_cfg.get("ai_style")):
                     ai_images.ken_burns(img, seconds_each, video_cfg["width"],
                                         video_cfg["height"], video_cfg["fps"], out)
                     print(f"  AI-generated visual for '{term}'")

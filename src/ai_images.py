@@ -15,8 +15,12 @@ from pathlib import Path
 
 import requests
 
-STYLE = ("cinematic photograph, moody dramatic lighting, shallow depth of field, "
-         "photorealistic, high detail, no text, no words, no watermark")
+# House look for generated visuals. A channel whose identity depends on where the
+# footage appears to be shot overrides this with config video.ai_style — the search
+# term itself cannot carry that, because the same term is also a Pexels query and
+# Pexels has little footage outside the usual Western defaults.
+DEFAULT_STYLE = ("cinematic photograph, moody dramatic lighting, shallow depth of field, "
+                 "photorealistic, high detail, no text, no words, no watermark")
 
 POLLINATIONS_URL = "https://image.pollinations.ai/prompt/{prompt}"
 GEMINI_IMAGE_MODELS = ["gemini-2.5-flash-image"]
@@ -80,8 +84,9 @@ def _gemini(prompt: str, w: int, h: int, out_path: Path) -> bool:
     return False
 
 
-def generate_scene_image(term: str, w: int, h: int, out_path: Path) -> bool:
-    prompt = f"{term}, {STYLE}"
+def generate_scene_image(term: str, w: int, h: int, out_path: Path,
+                         style: str | None = None) -> bool:
+    prompt = f"{term}, {style or DEFAULT_STYLE}"
     return _pollinations(prompt, w, h, out_path) or _gemini(prompt, w, h, out_path)
 
 

@@ -8,15 +8,57 @@ from . import llm
 
 HISTORY_FILE = Path(__file__).resolve().parent.parent / "data" / "topics_history.json"
 
-CTA_SENTENCE = "Like and subscribe for more mind facts."
+# The editorial rules the prompt enforces. These defaults reproduce the psychology
+# channel verbatim; a channel on another niche overrides them in config's "editorial"
+# block rather than forking this file.
+EDITORIAL_DEFAULTS = {
+    "cta": "Like and subscribe for more mind facts.",
+    "item_noun": "psychology fact",
+    "banned_topics": (
+        "Dunning-Kruger, Pavlov's dogs, placebo effect, left/right brain, 10% of the "
+        "brain, Maslow's pyramid, fight-or-flight basics"
+    ),
+    "banned_kinds": (
+        "neutral perceptual/sensory trivia and brain-quirk curiosities with no emotional "
+        "consequence (e.g. time-perception oddities, visual illusions, why clocks seem "
+        "to freeze)"
+    ),
+    "stakes": (
+        "their relationships, attraction, money, career, social status, self-image, or "
+        "how other people secretly judge and treat them"
+    ),
+    "prefer": (
+        "obscure named effects, weird well-replicated findings, forgotten experiments, "
+        "everyday behaviors with hidden causes, things people do daily without knowing why"
+    ),
+    "strongest_angles": (
+        "why people secretly like or dislike you, hidden signals you give off without "
+        "knowing, invisible forces steering your money and decisions, persuasion and "
+        "manipulation tactics quietly used on you every day, what your habits reveal about you"
+    ),
+    "hook_examples": (
+        'Bad: "Psychology has many interesting effects." '
+        'Good: "Your brain is lying to you right now." / "Why do you buy things you hate?"'
+    ),
+    # Injected verbatim as its own prompt block. Empty means "no house visual style",
+    # which is the behaviour every channel had before this existed. A channel whose
+    # identity depends on WHERE the footage looks like it was shot must set this:
+    # left unset, the image model quietly defaults to Western subjects and settings.
+    "visual_direction": "",
+}
 
 
-def enforce_cta(script: str) -> str:
+def editorial(config: dict) -> dict:
+    """This channel's editorial rules: config overrides layered over the defaults."""
+    return {**EDITORIAL_DEFAULTS, **(config.get("editorial") or {})}
+
+
+def enforce_cta(script: str, cta: str = EDITORIAL_DEFAULTS["cta"]) -> str:
     """Guarantee the script ends with the exact CTA, replacing any drifted variant."""
     sentences = re.split(r"(?<=[.!?])\s+", script.strip())
     while sentences and re.search(r"\b(subscribe|like and)\b", sentences[-1], re.IGNORECASE):
         sentences.pop()
-    sentences.append(CTA_SENTENCE)
+    sentences.append(cta)
     return " ".join(sentences)
 
 PROMPT_TEMPLATE = """You are the head writer for a viral faceless YouTube Shorts channel.
@@ -43,28 +85,20 @@ CRITICAL topic selection rule — obscurity is the product:
 - Every candidate must be something most viewers have NEVER heard of, have forgotten,
   or actively ignore. The target reaction is "wait, WHAT? why did nobody tell me this?"
 - BANNED: anything a casual viewer already knows from school, TikTok, or common
-  self-help content (e.g. Dunning-Kruger, Pavlov's dogs, placebo effect, left/right
-  brain, 10% of the brain, Maslow's pyramid, fight-or-flight basics). If normal people
+  self-help content (e.g. {banned_topics}). If normal people
   could name it, it is too famous — discard it.
 - A famous topic is allowed ONLY if the entire video is a little-known twist that even
   fans of the niche don't know (a buried detail, a modern finding that flips it, a
   real-world consequence nobody connects to it).
-- Prefer: obscure named effects, weird well-replicated findings, forgotten experiments,
-  everyday behaviors with hidden causes, things people do daily without knowing why.
+- Prefer: {prefer}.
 
 CRITICAL relevance rule — obscure is NOT enough, it must hit the viewer where they live:
-- Every candidate must have direct personal stakes: their relationships, attraction,
-  money, career, social status, self-image, or how other people secretly judge and
-  treat them. The viewer should feel exposed, seen, or slightly alarmed — "this is
-  about ME" — and immediately crave the next video.
-- BANNED: neutral perceptual/sensory trivia and brain-quirk curiosities with no
-  emotional consequence (e.g. time-perception oddities, visual illusions, why clocks
-  seem to freeze). "Huh, neat" is failure. If knowing the fact changes nothing about
-  how the viewer sees their own life, discard it.
-- Strongest angles: why people secretly like or dislike you, hidden signals you give
-  off without knowing, invisible forces steering your money and decisions, persuasion
-  and manipulation tactics quietly used on you every day, what your habits reveal
-  about you.
+- Every candidate must have direct personal stakes: {stakes}. The viewer should feel
+  exposed, seen, or slightly alarmed — "this is about ME" — and immediately crave the
+  next video.
+- BANNED: {banned_kinds}. "Huh, neat" is failure. If knowing the fact changes nothing
+  about how the viewer sees their own life, discard it.
+- Strongest angles: {strongest_angles}.
 
 Score each candidate 1-10 on: personal stakes (does it hit the viewer's relationships,
 money, status, or self-image?), craving factor (do they NEED more after watching?),
@@ -78,8 +112,7 @@ Rules for the script:
 - Total length {target_words} words (~{target_seconds} seconds spoken).
 - Sentence 1 is the HOOK and must be a direct question to the viewer OR a shocking
   claim, under 12 words, creating an instant curiosity gap. NEVER open with context,
-  background, or a topic announcement. Bad: "Psychology has many interesting effects."
-  Good: "Your brain is lying to you right now." / "Why do you buy things you hate?"
+  background, or a topic announcement. {hook_examples}
 - Short punchy sentences. No filler, no "welcome back", no self-reference.
 - Build the script around the unknown angle: open the curiosity gap, reveal the
   little-known fact as the payoff, then land ONE concrete "this is happening in your
@@ -89,10 +122,10 @@ Rules for the script:
 - Advertiser-friendly language only: no profanity, violence, sexual content, or
   shock-for-shock's-sake claims — the video must stay fully monetizable.
 - Second-to-last beat: a twist, cliffhanger, or question that provokes comments.
-- The FINAL sentence must be EXACTLY: "Like and subscribe for more mind facts."
-  Do not shorten it, reword it, or drop the word "like".
+- The FINAL sentence must be EXACTLY: "{cta}"
+  Do not shorten it, reword it, or drop any word from it.
 - Plain spoken text only: no emojis, no stage directions, no headers.
-
+{visual_direction}
 Return ONLY valid JSON, no markdown, exactly this shape:
 {{
   "topic": "short internal label for the topic",
@@ -130,6 +163,7 @@ def generate_video_plan(config: dict, forced_topic: str | None = None) -> dict:
     except Exception as exc:  # the feedback signal must never break the daily run
         print(f"    performance signal skipped: {exc}")
         performance = "(no performance data yet — pick purely on the scoring rules)"
+    ed = editorial(config)
     prompt = PROMPT_TEMPLATE.format(
         performance=performance,
         niche=config["niche"],
@@ -139,6 +173,7 @@ def generate_video_plan(config: dict, forced_topic: str | None = None) -> dict:
         target_words=int(target_seconds * 2.6),
         target_seconds=target_seconds,
         playlists=", ".join(config.get("playlists", ["Mind Facts"])),
+        **ed,
     )
     if forced_topic:
         prompt += f"\n\nOverride: the topic MUST be about: {forced_topic}"
@@ -147,7 +182,7 @@ def generate_video_plan(config: dict, forced_topic: str | None = None) -> dict:
     for key in ("topic", "title", "description", "tags", "script", "search_terms"):
         if key not in plan:
             raise RuntimeError(f"LLM plan missing key: {key}")
-    plan["script"] = enforce_cta(plan["script"])
+    plan["script"] = enforce_cta(plan["script"], ed["cta"])
     if "#shorts" not in plan["title"].lower():
         plan["title"] = plan["title"].rstrip() + " #Shorts"
     return plan

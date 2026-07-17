@@ -26,28 +26,22 @@ away from the underperformers — but NEVER repeat a covered theme.
 Task: silently brainstorm 4 candidate countdown themes, score each 1-10 on obscurity,
 mind-blow factor, and click appeal, then create ONE countdown video for the single
 highest-scoring theme: "{items_count} <things> ..." where every item is a little-known
-psychology fact. If a candidate feels generic or familiar, discard it.
+{item_noun}. If a candidate feels generic or familiar, discard it.
 
 CRITICAL selection rule — obscurity is the product:
 - Every item must be something most viewers have NEVER heard of, have forgotten, or
   actively ignore. Target reaction: "wait, WHAT? why did nobody tell me this?"
 - BANNED: anything a casual viewer knows from school, TikTok, or common self-help
-  content (Dunning-Kruger, Pavlov's dogs, placebo effect, left/right brain, 10% of
-  the brain, Maslow's pyramid, fight-or-flight basics).
-- Prefer: obscure named effects, weird well-replicated findings, forgotten
-  experiments, everyday behaviors with hidden causes.
+  content ({banned_topics}).
+- Prefer: {prefer}.
 
 CRITICAL relevance rule — obscure is NOT enough, every item must hit the viewer
 where they live:
-- Direct personal stakes only: their relationships, attraction, money, career,
-  social status, self-image, or how other people secretly judge and treat them.
-  The viewer should feel exposed, seen, or slightly alarmed — "this is about ME".
-- BANNED: neutral perceptual/sensory trivia and brain-quirk curiosities with no
-  emotional consequence. "Huh, neat" is failure. If knowing the fact changes
+- Direct personal stakes only: {stakes}. The viewer should feel exposed, seen, or
+  slightly alarmed — "this is about ME".
+- BANNED: {banned_kinds}. "Huh, neat" is failure. If knowing the fact changes
   nothing about how the viewer sees their own life, replace the item.
-- Strongest angles: why people secretly like or dislike you, hidden signals you
-  give off without knowing, invisible forces steering your money and decisions,
-  persuasion tactics quietly used on you every day, what your habits reveal.
+- Strongest angles: {strongest_angles}.
 - Order items so the strongest, most mind-blowing one is LAST (#1) and the second
   strongest is FIRST, so the video opens hot and ends unforgettable.
 
@@ -66,10 +60,11 @@ Rules for every item script:
 
 Intro script ({intro_words} words max): the FIRST sentence must be a direct question
 or shocking claim under 12 words — never context. Then open a huge curiosity gap and
-promise the countdown ("...and number one will change how you see your own mind").
+promise the countdown, ending on a promise that number one will change how the viewer
+sees something they take for granted.
 Outro script ({outro_words} words max): one-line payoff, ask which item shocked them
 most (comment bait), then the FINAL sentence must be EXACTLY:
-"Like and subscribe for more mind facts." Do not shorten or reword it.
+"{cta}" Do not shorten or reword it.
 
 Return ONLY valid JSON, no markdown, exactly this shape:
 {{
@@ -128,6 +123,8 @@ def generate_longform_plan(config: dict) -> dict:
     except Exception as exc:  # the feedback signal must never break the weekly run
         print(f"    performance signal skipped: {exc}")
         performance = "(no performance data yet — pick purely on the scoring rules)"
+    from .script_gen import editorial
+    ed = editorial(config)
     prompt = PROMPT_TEMPLATE.format(
         performance=performance,
         niche=config["niche"],
@@ -139,6 +136,7 @@ def generate_longform_plan(config: dict) -> dict:
         intro_words=int(lf.get("intro_words", 45)),
         outro_words=int(lf.get("outro_words", 35)),
         playlists=", ".join(config.get("playlists", ["Mind Facts"])),
+        **ed,
     )
     plan = llm.generate_json(prompt, config)
     for key in ("theme", "title", "description", "tags", "thumbnail_text",
@@ -149,5 +147,5 @@ def generate_longform_plan(config: dict) -> dict:
         raise RuntimeError(f"LLM returned only {len(plan['items'])} items")
     # the exact CTA is enforced in code, same as the Shorts pipeline
     from .script_gen import enforce_cta
-    plan["outro"]["script"] = enforce_cta(plan["outro"]["script"])
+    plan["outro"]["script"] = enforce_cta(plan["outro"]["script"], ed["cta"])
     return plan
