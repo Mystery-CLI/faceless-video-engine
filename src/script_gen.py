@@ -45,6 +45,10 @@ EDITORIAL_DEFAULTS = {
     # identity depends on WHERE the footage looks like it was shot must set this:
     # left unset, the image model quietly defaults to Western subjects and settings.
     "visual_direction": "",
+    # Injected verbatim as its own prompt block, after the standard script rules.
+    # For channel-specific structural requirements (e.g. a mandatory closing beat)
+    # that don't belong in the shared template. Empty means no extra rules.
+    "extra_rules": "",
 }
 
 
@@ -125,6 +129,7 @@ Rules for the script:
 - The FINAL sentence must be EXACTLY: "{cta}"
   Do not shorten it, reword it, or drop any word from it.
 - Plain spoken text only: no emojis, no stage directions, no headers.
+{extra_rules}
 {visual_direction}
 Return ONLY valid JSON, no markdown, exactly this shape:
 {{

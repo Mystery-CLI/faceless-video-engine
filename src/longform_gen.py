@@ -65,7 +65,7 @@ sees something they take for granted.
 Outro script ({outro_words} words max): one-line payoff, ask which item shocked them
 most (comment bait), then the FINAL sentence must be EXACTLY:
 "{cta}" Do not shorten or reword it.
-
+{extra_rules}
 Return ONLY valid JSON, no markdown, exactly this shape:
 {{
   "theme": "short internal label for the countdown theme",
