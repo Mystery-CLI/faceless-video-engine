@@ -5,6 +5,9 @@ $projectDir = $PSScriptRoot
 $config = Get-Content (Join-Path $projectDir "config.json") | ConvertFrom-Json
 $time = $config.schedule_time
 if (-not $time) { $time = "09:00" }
+# Distinct per channel so a second deployment can never overwrite another channel's task.
+$taskName = $config.schedule_task_name
+if (-not $taskName) { $taskName = "YouTube Shorts Daily Upload" }
 
 $python = (Get-Command python).Source
 $action = New-ScheduledTaskAction -Execute $python -Argument "`"$projectDir\run_daily.py`"" -WorkingDirectory $projectDir
@@ -22,6 +25,6 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable `
     -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
     -RestartCount 2 -RestartInterval (New-TimeSpan -Minutes 10)
 
-Register-ScheduledTask -TaskName "YouTube Shorts Daily Upload" -Action $action -Trigger $trigger -Settings $settings -Force
+Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Settings $settings -Force
 Write-Host "Scheduled task registered: runs daily at $time (catches up if PC was off)."
-Write-Host "Manage it in Task Scheduler under 'YouTube Shorts Daily Upload'."
+Write-Host "Manage it in Task Scheduler under '$taskName'."
