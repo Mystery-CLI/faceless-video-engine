@@ -1,0 +1,117 @@
+{
+  "_comment": "Example channel configuration. Copy this file to config.json and make it yours. JSON does not allow real comments, so keys starting with _comment are explanations; the engine ignores them. Anything you delete falls back to a sensible default.",
+
+  "_comment_niche": "The single most important setting. Describe the niche in one rich sentence: not just the subject, but the angle that makes people click. The topic picker and script writer both read this verbatim.",
+  "niche": "deep ocean life and the strange creatures of the abyss: bioluminescence, crushing pressure, alien-looking predators, survival tricks that sound invented but are real, and how little of the ocean we have actually explored",
+
+  "_comment_channel_persona": "Who the narrator is and how the channel should feel. This shapes tone, pacing, and how videos end.",
+  "channel_persona": "A calm, awestruck narrator surfacing ocean facts that make viewers feel like they just glimpsed another planet. Opens with the strangest detail first, keeps sentences short and vivid, and ends each video with a question that pulls viewers into the comments.",
+
+  "_comment_editorial": "The rules the AI writes under. This block is what lets one codebase serve unrelated channels: leave it out entirely and the engine uses its built-in defaults. Every field is optional.",
+  "editorial": {
+    "cta": "Subscribe for more from the deep.",
+    "item_noun": "ocean fact",
+    "banned_topics": "the blobfish, the anglerfish light lure, 'we know more about the Moon than the ocean' as a standalone fact, Mariana Trench depth comparisons",
+    "banned_kinds": "dry taxonomy or size-comparison trivia with no story or stakes (e.g. lists of how big whales are)",
+    "stakes": "wonder, unease, and the feeling that something vast and unknown is close by; what these creatures reveal about survival, adaptation, and how strange life can get",
+    "prefer": "recently discovered species, extreme survival mechanisms, behaviors filmed only once, deep-sea mysteries that researchers still argue about",
+    "strongest_angles": "creatures that break the rules of biology, what happens to the human body at depth, sounds from the deep nobody has explained, hunting strategies that feel like science fiction",
+    "hook_examples": "Bad: 'The ocean has many strange creatures.' Good: 'There is a shark alive today that was born before the United States existed.'",
+    "visual_direction": "",
+    "extra_rules": ""
+  },
+
+  "video": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "target_seconds": 45,
+    "clips_count": 5,
+    "transition_seconds": 0.35,
+    "music_volume": 0.06,
+
+    "_comment_ai_image_ratio": "Balance of AI-generated visuals vs stock footage: 0 is all stock, 1 is all AI.",
+    "ai_image_ratio": 0.5,
+
+    "_comment_ai_style": "The house look of every generated image. The most important setting for a channel with a distinct visual identity. Injected into every image prompt.",
+    "ai_style": "cinematic underwater photography, deep blue and black palette, volumetric light rays from above, photorealistic, slightly eerie",
+
+    "_comment_fallback_search_terms": "Stock-footage searches used when the script does not suggest anything better. Keep them generic to your niche.",
+    "fallback_search_terms": [
+      "deep ocean underwater",
+      "jellyfish dark water",
+      "submarine light beam",
+      "coral reef night",
+      "ocean surface storm",
+      "school of fish underwater"
+    ]
+  },
+
+  "tts": {
+    "_comment": "Any Microsoft Edge neural voice works; run 'edge-tts --list-voices' to browse. 'dynamic' lets the engine vary delivery per sentence.",
+    "voice": "en-US-AndrewMultilingualNeural",
+    "rate": "+8%",
+    "dynamic": true
+  },
+
+  "llm": {
+    "provider": "gemini",
+    "model": "gemini-flash-latest"
+  },
+
+  "captions": {
+    "_comment": "Colors are ASS-format &HAABBGGRR. highlight_color is the karaoke word highlight.",
+    "font": "Arial Black",
+    "font_size": 88,
+    "words_per_chunk": 3,
+    "primary_color": "&H00FFFFFF",
+    "highlight_color": "&H0000D7FF"
+  },
+
+  "cleanup": {
+    "_comment": "keep_local_videos 0 deletes finished videos after upload; they live on YouTube. broll_cache_mb caps the stock-footage cache.",
+    "keep_local_videos": 0,
+    "broll_cache_mb": 150
+  },
+
+  "branding": {
+    "_comment": "Optional sonic signature mixed under the last seconds of every video. Point it at your own mp3 (make_brand_sound.py can generate candidates), or leave the path empty for none.",
+    "sonic_logo": "",
+    "sonic_logo_volume": 0.5
+  },
+
+  "_comment_playlists": "Playlist names the channel sorts videos into. The engine creates them on YouTube if they do not exist and assigns every video to the best fit.",
+  "playlists": [
+    "Creatures of the Abyss",
+    "Survival in the Deep",
+    "Unsolved Ocean Mysteries",
+    "How the Ocean Works"
+  ],
+
+  "upload": {
+    "_comment": "category_id 27 is Education, 28 is Science and Technology, 24 is Entertainment. contains_synthetic_media must stay true while the voice is synthetic.",
+    "enabled": true,
+    "privacy": "public",
+    "category_id": "27",
+    "made_for_kids": false,
+    "contains_synthetic_media": true,
+    "extra_tags": ["shorts", "ocean", "oceanfacts", "deepsea", "marinelife", "facts", "didyouknow"]
+  },
+
+  "_comment_schedule_time": "Local time the daily scheduled task fires, 24h format.",
+  "schedule_time": "09:00",
+
+  "longform": {
+    "_comment": "The weekly long-form countdown video: how many items, how long each runs, and when it builds.",
+    "items_count": 8,
+    "item_words": 135,
+    "intro_words": 45,
+    "outro_words": 35,
+    "width": 1920,
+    "height": 1080,
+    "font_size": 60,
+    "hook_font_size": 80,
+    "schedule_day": "Sunday",
+    "schedule_time": "13:00"
+  }
+}

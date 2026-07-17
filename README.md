@@ -79,7 +79,12 @@ Copy `.env.example` to `.env` and fill in:
   pipeline leans on generated visuals and the b-roll cache.
 - **YOUTUBE_API_KEY**: optional, public-stats fallback for the analytics loop.
 
-### 3. YouTube access (one time)
+### 3. Configure your channel
+Copy `config.example.json` to `config.json` and edit it. The example is fully commented;
+at minimum set `niche` and `channel_persona`, then work through the rest as your channel
+finds its identity (see *Making it your channel* below).
+
+### 4. YouTube access (one time)
 1. https://console.cloud.google.com/ → create a project.
 2. APIs & Services → Library → enable **YouTube Data API v3**
    (and **YouTube Analytics API** for the feedback loop).
@@ -96,14 +101,14 @@ Copy `.env.example` to `.env` and fill in:
 > the right one before scheduling. *(First-class multi-channel support via a `--profile`
 > flag is on the roadmap.)*
 
-### 4. Try it
+### 5. Try it
 ```bash
 python run_daily.py --no-upload   # build into output/ without uploading
 python run_daily.py               # full run including upload
 python run_weekly.py --no-upload  # build a long-form video
 ```
 
-### 5. Schedule
+### 6. Schedule
 ```powershell
 powershell -ExecutionPolicy Bypass -File setup_schedule.ps1          # daily
 powershell -ExecutionPolicy Bypass -File setup_schedule_weekly.ps1   # weekly
@@ -113,7 +118,8 @@ powershell -ExecutionPolicy Bypass -File setup_schedule_weekly.ps1   # weekly
 
 ## Making it your channel
 
-Everything channel-specific is in **`config.json`**. No code changes.
+Everything channel-specific is in **`config.json`**, which you create by copying
+`config.example.json`. No code changes.
 
 | Key | Controls |
 |---|---|

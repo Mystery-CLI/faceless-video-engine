@@ -6,5 +6,10 @@ output/
 work/
 logs/
 assets/broll/
-data/performance.json
 assets/music/
+
+# Channel identity: every deployment supplies its own
+config.json
+data/*.json
+assets/brand/
+branding/
