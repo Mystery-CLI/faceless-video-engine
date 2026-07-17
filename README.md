@@ -74,10 +74,10 @@ pip install -r requirements.txt
 ### 2. API keys (both free, no card)
 Copy `.env.example` to `.env` and fill in:
 
-- **GEMINI_API_KEY** — https://aistudio.google.com/apikey. Scripts and topic selection.
-- **PEXELS_API_KEY** — https://www.pexels.com/api/. Stock footage. Optional; without it the
+- **GEMINI_API_KEY**: https://aistudio.google.com/apikey. Scripts and topic selection.
+- **PEXELS_API_KEY**: https://www.pexels.com/api/. Stock footage. Optional; without it the
   pipeline leans on generated visuals and the b-roll cache.
-- **YOUTUBE_API_KEY** — optional, public-stats fallback for the analytics loop.
+- **YOUTUBE_API_KEY**: optional, public-stats fallback for the analytics loop.
 
 ### 3. YouTube access (one time)
 1. https://console.cloud.google.com/ → create a project.
@@ -86,7 +86,7 @@ Copy `.env.example` to `.env` and fill in:
 3. OAuth consent screen → External → add your Google account as a **test user**.
 4. Credentials → Create credentials → **OAuth client ID** → **Desktop app** → download the
    JSON as `client_secret.json` in the project root.
-5. `python authorize.py` — a browser opens; **sign in as the channel you want to publish
+5. `python authorize.py`. A browser opens; **sign in as the channel you want to publish
    to** and allow access. The consent screen will warn the app is unverified (it is your
    own app; that is expected): Advanced → Go to app → Allow.
 
@@ -119,7 +119,7 @@ Everything channel-specific is in **`config.json`**. No code changes.
 |---|---|
 | `niche`, `channel_persona` | What the channel is about and how it sounds |
 | `editorial` | The rules the AI writes under: exact call-to-action, banned topics, required stakes, hook examples, and `visual_direction` (what the visuals may and may not show) |
-| `video.ai_style` | The house look of generated visuals — the single most important setting for a channel with a distinct visual identity |
+| `video.ai_style` | The house look of generated visuals; the single most important setting for a channel with a distinct visual identity |
 | `video.ai_image_ratio` | Balance of AI-generated vs stock footage (0 = all stock, 1 = all AI) |
 | `captions` | Fonts and colours, including the karaoke highlight |
 | `playlists`, `upload` | Playlist names, tags, privacy, category |
