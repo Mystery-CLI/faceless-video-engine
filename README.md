@@ -22,19 +22,29 @@ them but a config file.
 topic  ─▶  script + metadata  ─▶  voiceover  ─▶  captions  ─▶  visuals  ─▶  render  ─▶  upload  ─▶  file & clean up
 ```
 
-1. **Chooses a topic.** Brainstorms candidates in your niche, scores them, and writes only
-   the best one. It reads a history of everything already covered so it never repeats, and
-   it reads real audience retention data (once there is any) to steer toward what works.
-2. **Writes the script and metadata.** Hook-first, length-controlled, with SEO title,
-   description, tags, an engagement comment, and a playlist assignment. Editorial rules
-   (what to cover, what to ban, the exact call-to-action) are configuration, not code.
+1. **Researches a real finding.** A research pass (on a stronger model reserved for the
+   few calls a day where writing quality is the product) picks one verifiable, little-known
+   finding in your niche and pins down its specifics: who found it, what the study actually
+   did, and the exact number that sounds fake but is true. Inventing studies or effect
+   names is forbidden. It reads a history of everything already covered so it never
+   repeats, and real audience retention data (once there is any) steers what works.
+2. **Writes the script and metadata.** Written strictly from the researched facts:
+   hook-first, length-controlled, interactive (after the payoff the viewer gets a concrete
+   "try this today" action or a direct question, ideally both), with SEO title,
+   description, tags, an engagement comment, and a playlist assignment. A critic pass then
+   judges what the viewer learns, surprise, clarity, and interactivity; a failing draft is
+   rewritten once with the critique injected. Editorial rules (what to cover, what to ban,
+   the exact call-to-action) are configuration, not code.
 3. **Voices it** with Microsoft Edge neural TTS (free), timed per word.
 4. **Captions it** with animated word-by-word karaoke subtitles burned in by ffmpeg, plus
    a hook title card on the opening frame (which becomes the Shorts thumbnail).
 5. **Illustrates it.** Generates unique AI visuals (Pollinations, keyless; Gemini as
    second choice) animated with Ken Burns motion, interleaved with Pexels stock footage at
    a configurable ratio, with a five-level fallback chain so a frame is never blank.
-6. **Renders** the video with crossfades, a music bed, and an optional sonic-logo sting.
+6. **Renders** the video with crossfades, animated word-by-word captions, a music bed,
+   and an optional sonic-logo sting. Remotion (React-based rendering) is the priority
+   renderer; if Node or the Remotion project is missing, or a render fails, the engine
+   falls back to an equivalent ffmpeg pipeline so an unattended run never dies.
 7. **Uploads** to YouTube with the AI-content disclosure set automatically, posts the
    engagement comment, and sorts the video into a themed playlist.
 8. **Files and cleans up.** Records the upload in history and deletes local working files;
@@ -64,11 +74,13 @@ The parts that matter when nobody is watching:
 
 ## Setup
 
-Needs **Python 3.11+** and **ffmpeg** on PATH.
+Needs **Python 3.11+** and **ffmpeg** on PATH. **Node.js 18+** is recommended for the
+Remotion renderer (without it, videos render through ffmpeg instead).
 
 ### 1. Install
 ```bash
 pip install -r requirements.txt
+cd remotion && npm install && cd ..   # optional: enables the Remotion renderer
 ```
 
 ### 2. API keys (both free, no card)
@@ -157,7 +169,8 @@ engine falls back to sensible defaults.
 | `src/script_gen.py`, `src/longform_gen.py` | Topic selection + writing; holds the editorial defaults |
 | `src/tts.py`, `src/captions.py` | Voiceover and animated captions |
 | `src/visuals.py`, `src/ai_images.py` | Stock footage and AI visuals |
-| `src/assemble.py` | Final ffmpeg render |
+| `src/assemble.py`, `src/remotion_render.py` | Final render: Remotion first, ffmpeg fallback |
+| `remotion/` | Remotion project (React compositions for captions, transitions, hook card) |
 | `src/upload.py`, `src/analytics.py` | YouTube upload and the retention feedback loop |
 | `config.json` | Everything channel-specific |
 | `data/` | History (prevents repeats) and cached analytics |

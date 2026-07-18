@@ -237,14 +237,16 @@ def main() -> int:
         n_clips = config["video"].get("clips_count", 5)
         td = float(config["video"].get("transition_seconds", 0.35))
         terms = (plan["search_terms"] * n_clips)[:n_clips]
+        briefs = visuals.scene_prompt_list(plan["search_terms"], plan.get("scene_prompts"))
+        briefs = (briefs * n_clips)[:n_clips] if briefs else None
         # clips overlap during crossfades, so each must be slightly longer (+ margin)
         per_clip = (duration + 0.6 + (n_clips - 1) * td) / n_clips + 0.3
-        clips = visuals.fetch_clips(terms, per_clip, config, workdir)
+        clips = visuals.fetch_clips(terms, per_clip, config, workdir, ai_prompts=briefs)
 
         log("5/6 Assembling video (ffmpeg)...")
         out_file = OUT_DIR / f"short_{stamp}.mp4"
         assemble.build_video(clips, voice_mp3, ass_file, config, workdir, out_file,
-                             music_mood=plan.get("music_mood"))
+                             music_mood=plan.get("music_mood"), words=words, hook=hook)
         log(f"    saved: {out_file}")
 
         url = None

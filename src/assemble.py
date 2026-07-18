@@ -49,12 +49,30 @@ TRANSITIONS = ["fade", "fade", "smoothleft", "smoothright", "smoothup", "circleo
 
 def build_video(raw_clips: list, voice_mp3: Path, ass_file: Path, config: dict,
                 workdir: Path, out_file: Path, music_mood: str | None = None,
-                with_music: bool = True, with_logo: bool = True) -> Path:
+                with_music: bool = True, with_logo: bool = True,
+                words: list | None = None, hook: str | None = None) -> Path:
     v = config["video"]
     w, h, fps = v["width"], v["height"], v["fps"]
     td = float(v.get("transition_seconds", 0.35))
     music_vol = float(v.get("music_volume", 0.06))
     logo_vol = float(config.get("branding", {}).get("sonic_logo_volume", 0.5))
+
+    # Remotion is the priority renderer; the ffmpeg path below is the fallback
+    # that keeps unattended runs alive when Node/the project isn't available.
+    renderer = str(v.get("renderer", "remotion")).strip().lower()
+    if renderer != "ffmpeg" and words:
+        from . import remotion_render
+        if remotion_render.available():
+            try:
+                return remotion_render.render(
+                    raw_clips, voice_mp3, words, hook, config, workdir, out_file,
+                    music=_pick_music(music_mood) if with_music else None,
+                    logo=_brand_logo(config) if with_logo else None)
+            except Exception as e:
+                print(f"  Remotion render failed, falling back to ffmpeg: {e}")
+        else:
+            print("  Remotion project not installed (npm install in remotion/); using ffmpeg")
+
     audio_len = _probe_duration(voice_mp3)
     total = audio_len + 0.6  # small tail so the last word isn't clipped
     n = len(raw_clips)

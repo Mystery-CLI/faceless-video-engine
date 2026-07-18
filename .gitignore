@@ -7,6 +7,8 @@ work/
 logs/
 assets/broll/
 assets/music/
+remotion/node_modules/
+remotion/public/
 
 # Channel identity: every deployment supplies its own
 config.json

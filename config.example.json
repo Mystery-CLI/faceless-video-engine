@@ -36,6 +36,9 @@
     "_comment_ai_style": "The house look of every generated image. The most important setting for a channel with a distinct visual identity. Injected into every image prompt.",
     "ai_style": "cinematic underwater photography, deep blue and black palette, volumetric light rays from above, photorealistic, slightly eerie",
 
+    "_comment_renderer": "remotion (default) renders with the Remotion project in remotion/ (needs Node 18+ and one npm install there) and falls back to ffmpeg automatically; set to ffmpeg to skip Remotion entirely.",
+    "renderer": "remotion",
+
     "_comment_fallback_search_terms": "Stock-footage searches used when the script does not suggest anything better. Keep them generic to your niche.",
     "fallback_search_terms": [
       "deep ocean underwater",
@@ -55,8 +58,10 @@
   },
 
   "llm": {
+    "_comment": "model handles bulk utility calls. quality_model is used for the few calls a day where the writing is the product (topic research, the script, the critic review); it falls back down the chain automatically if its free-tier quota runs out.",
     "provider": "gemini",
-    "model": "gemini-flash-latest"
+    "model": "gemini-flash-latest",
+    "quality_model": "gemini-2.5-pro"
   },
 
   "captions": {

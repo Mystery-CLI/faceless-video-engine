@@ -52,11 +52,21 @@ def _pollinations(prompt: str) -> str:
 FALLBACK_MODELS = ["gemini-3.1-flash-lite", "gemini-flash-lite-latest"]
 
 
-def generate(prompt: str, config: dict) -> str:
-    """Return raw LLM text for a prompt, retrying and falling back as needed."""
+def quality_model(config: dict) -> str:
+    """The model for the few calls a day where the writing IS the product
+    (topic research, script, critic). Falls back through the normal chain if
+    its free-tier quota is exhausted, so it can never block a run."""
+    return config.get("llm", {}).get("quality_model", "gemini-2.5-pro")
+
+
+def generate(prompt: str, config: dict, model: str | None = None) -> str:
+    """Return raw LLM text for a prompt, retrying and falling back as needed.
+
+    model: optional override tried before the configured primary."""
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     primary = config.get("llm", {}).get("model", "gemini-flash-latest")
-    models = [primary] + [m for m in FALLBACK_MODELS if m != primary]
+    wanted = [m for m in (model, primary) if m]
+    models = list(dict.fromkeys(wanted + FALLBACK_MODELS))
     errors = []
     if api_key:
         for model in models:
@@ -75,11 +85,11 @@ def generate(prompt: str, config: dict) -> str:
     raise RuntimeError("All LLM providers failed:\n" + "\n".join(errors))
 
 
-def generate_json(prompt: str, config: dict) -> dict:
+def generate_json(prompt: str, config: dict, model: str | None = None) -> dict:
     """Ask for JSON and parse it robustly (strips markdown fences, finds outer braces)."""
     last_err = None
     for _ in range(3):
-        text = generate(prompt, config)
+        text = generate(prompt, config, model=model)
         cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip(), flags=re.MULTILINE)
         match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
         if match:

@@ -93,8 +93,25 @@ def _gradient_clip(seconds: float, index: int, out_path: Path, width: int, heigh
     )
 
 
-def fetch_clips(search_terms: list, seconds_each: float, config: dict, workdir: Path) -> list:
-    """Return a list of raw clip paths, one per search term (order preserved)."""
+def scene_prompt_list(terms: list, prompts) -> list | None:
+    """The plan's per-scene illustration briefs, but only if they line up 1:1
+    with the search terms — anything else (missing, wrong length, junk entries)
+    means the AI slots fall back to the search term, exactly as before briefs
+    existed."""
+    if isinstance(prompts, list) and len(prompts) == len(terms) \
+            and all(isinstance(p, str) and p.strip() for p in prompts):
+        return [p.strip() for p in prompts]
+    return None
+
+
+def fetch_clips(search_terms: list, seconds_each: float, config: dict, workdir: Path,
+                ai_prompts: list | None = None) -> list:
+    """Return a list of raw clip paths, one per search term (order preserved).
+
+    ai_prompts: optional per-scene illustration briefs (same order as
+    search_terms). AI slots render the brief — a full description of what the
+    picture must show to carry the narration's meaning — while Pexels keeps
+    the short search term, which is all a stock library can match."""
     api_key = os.getenv("PEXELS_API_KEY", "").strip()
     video_cfg = config["video"]
     orientation = "portrait" if video_cfg["height"] > video_cfg["width"] else "landscape"
@@ -110,13 +127,14 @@ def fetch_clips(search_terms: list, seconds_each: float, config: dict, workdir: 
         if ai_ratio > 0 and i % max(1, round(1 / ai_ratio)) == 0:
             from . import ai_images
             img = workdir / f"ai_{i}.jpg"
+            brief = ai_prompts[i] if ai_prompts and i < len(ai_prompts) else term
             try:
-                if ai_images.generate_scene_image(term, video_cfg["width"],
+                if ai_images.generate_scene_image(brief, video_cfg["width"],
                                                   video_cfg["height"], img,
                                                   style=video_cfg.get("ai_style")):
                     ai_images.ken_burns(img, seconds_each, video_cfg["width"],
                                         video_cfg["height"], video_cfg["fps"], out)
-                    print(f"  AI-generated visual for '{term}'")
+                    print(f"  AI-generated visual: '{brief}'")
                     got = True
             except Exception as e:
                 print(f"  AI visual failed for '{term}', using stock: {e}")

@@ -50,7 +50,9 @@ Rules for every item script:
   a direct question to the viewer OR a shocking claim, under 12 words, creating an
   instant curiosity gap — NEVER open an item with context or a topic announcement.
   Then the reveal, then ONE concrete "this is happening in your life right now"
-  example, and END the item on a twist or a question that provokes comments.
+  example, and END the item interactively: a one-line "try this today" action the
+  viewer can actually do, OR a direct question they would answer in the comments —
+  talk WITH the viewer, never lecture at them.
 - Short punchy sentences. No filler, no "welcome back", no self-reference, no spoken
   transitions like "next up" or "moving on" (numbering is shown on screen, not spoken).
 - Factually accurate — obscure but TRUE, never invented or exaggerated. No
@@ -76,11 +78,11 @@ Return ONLY valid JSON, no markdown, exactly this shape:
   "music_mood": "exactly one of: suspense, chill",
   "comment": "a short question (under 20 words) to post as the channel's own comment, asking which item shocked them most",
   "playlist": "exactly one of: {playlists}",
-  "intro": {{"script": "...", "search_terms": ["3 stock-video search phrases (2-3 words each), concrete filmable subjects that exist in stock libraries (people, objects, places, actions), never abstract concepts"]}},
+  "intro": {{"script": "...", "search_terms": ["3 stock-video search phrases (2-3 words each), concrete filmable subjects that exist in stock libraries (people, objects, places, actions), never abstract concepts"], "scene_prompts": ["3 illustration briefs, one per search term, SAME ORDER: each describes the single picture that shows what the script is saying during that scene — subject, action, and the one detail carrying the point, physical metaphors for abstract ideas, 15-25 words, no text or lettering in the picture"]}},
   "items": [
-    {{"name": "short display name of the effect/fact", "script": "...", "search_terms": ["4 stock-video search phrases (2-3 words each), IN CHRONOLOGICAL ORDER matching this item's story from mini-hook to ending, concrete filmable subjects only"]}}
+    {{"name": "short display name of the effect/fact", "script": "...", "search_terms": ["4 stock-video search phrases (2-3 words each), IN CHRONOLOGICAL ORDER matching this item's story from mini-hook to ending, concrete filmable subjects only"], "scene_prompts": ["4 illustration briefs, one per search term, SAME ORDER, same rules as the intro's scene_prompts"]}}
   ],
-  "outro": {{"script": "...", "search_terms": ["2 stock-video phrases"]}}
+  "outro": {{"script": "...", "search_terms": ["2 stock-video phrases"], "scene_prompts": ["2 illustration briefs, one per search term, SAME ORDER, same rules as the intro's scene_prompts"]}}
 }}
 The items array must contain exactly {items_count} entries, ordered from #{items_count} down to #1."""
 
@@ -138,7 +140,7 @@ def generate_longform_plan(config: dict) -> dict:
         playlists=", ".join(config.get("playlists", ["Mind Facts"])),
         **ed,
     )
-    plan = llm.generate_json(prompt, config)
+    plan = llm.generate_json(prompt, config, model=llm.quality_model(config))
     for key in ("theme", "title", "description", "tags", "thumbnail_text",
                 "intro", "items", "outro"):
         if key not in plan:

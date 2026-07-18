@@ -83,7 +83,7 @@ def _find_resumable() -> Path | None:
 
 
 def _build_segment(name: str, script: str, terms: list, hook: str | None,
-                   cfg: dict, workdir: Path) -> Path:
+                   cfg: dict, workdir: Path, scene_prompts: list | None = None) -> Path:
     """One countdown segment = one mini video through the normal engine, no music."""
     seg_dir = workdir / name
     seg_dir.mkdir(parents=True, exist_ok=True)
@@ -102,14 +102,18 @@ def _build_segment(name: str, script: str, terms: list, hook: str | None,
     # Shorts-style pacing: a fresh clip roughly every 9-10 seconds, never a long
     # static shot. Terms repeat if needed; used_ids in visuals prevents dupes.
     n_clips = max(1, round(duration / 9.5))
+    briefs = visuals.scene_prompt_list(terms, scene_prompts)
     terms = (list(terms) * ((n_clips // max(1, len(terms))) + 1))[:n_clips] if terms else []
+    if briefs:  # cycled with the same formula so brief i still narrates clip i
+        briefs = (briefs * ((n_clips // max(1, len(briefs))) + 1))[:n_clips]
     td = float(cfg["video"]["transition_seconds"])
     per_clip = (duration + 0.6 + (n_clips - 1) * td) / n_clips + 0.3
-    clips = visuals.fetch_clips(terms[:n_clips], per_clip, cfg, seg_dir)
+    clips = visuals.fetch_clips(terms[:n_clips], per_clip, cfg, seg_dir, ai_prompts=briefs)
     seg_out = seg_dir / f"{name}.mp4"
     # sonic logo plays once, under the intro's hook — not on every segment
     assemble.build_video(clips, voice, ass_file, cfg, seg_dir, seg_out,
-                         with_music=False, with_logo=(name == "intro"))
+                         with_music=False, with_logo=(name == "intro"),
+                         words=words, hook=hook)
     return seg_out
 
 
@@ -220,7 +224,8 @@ def main() -> int:
 
         for name, part, chapter_label, hook in parts:
             seg = _build_segment(name, part["script"], part.get("search_terms", []),
-                                 hook, cfg, workdir)
+                                 hook, cfg, workdir,
+                                 scene_prompts=part.get("scene_prompts"))
             chapters.append(f"{_fmt_chapter(cursor)} {chapter_label}")
             cursor += _probe(seg)
             segments.append(seg)
